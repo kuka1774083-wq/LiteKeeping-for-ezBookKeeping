@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">轻记账</string>
-    <string name="widget_month_balance">服务器账户总额</string>
-    <string name="widget_description">查看服务器账户总额并快速记账</string>
+    <string name="widget_month_balance">云端账户总额</string>
+    <string name="widget_description">查看云端账户总额并快速记账</string>
+    <string name="open_ezbookkeeping">打开 ezBookkeeping</string>
     <string name="add_expense">记支出</string>
     <string name="add_income">记收入</string>
     <string name="add_transfer">记转账</string>

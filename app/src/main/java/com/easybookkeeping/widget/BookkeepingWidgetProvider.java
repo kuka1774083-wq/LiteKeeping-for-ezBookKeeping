@@ -60,6 +60,7 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.widget_expense_button, activityIntent(context, "expense", 1));
         views.setOnClickPendingIntent(R.id.widget_income_button, activityIntent(context, "income", 2));
         views.setOnClickPendingIntent(R.id.widget_transfer_button, activityIntent(context, "transfer", 3));
+        views.setOnClickPendingIntent(R.id.widget_web_button, webIntent(context));
         return views;
     }
 
@@ -72,6 +73,17 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         return PendingIntent.getActivity(
                 context,
                 requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+    }
+
+    private static PendingIntent webIntent(Context context) {
+        Intent intent = new Intent(context, WebViewActivity.class)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        return PendingIntent.getActivity(
+                context,
+                4,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );

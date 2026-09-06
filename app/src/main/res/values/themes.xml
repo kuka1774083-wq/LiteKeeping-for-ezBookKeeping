@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.EasyBookkeeping" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="Theme.EzBookKeeping" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:colorAccent">#16865C</item>
         <item name="android:navigationBarColor">#F8FBF9</item>
