@@ -1,4 +1,4 @@
-package com.easybookkeeping.widget;
+package com.ezbookkeeping.widget;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;

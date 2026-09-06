@@ -1,4 +1,4 @@
-package com.easybookkeeping.widget;
+package com.ezbookkeeping.widget;
 
 final class Transaction {
     final long id;

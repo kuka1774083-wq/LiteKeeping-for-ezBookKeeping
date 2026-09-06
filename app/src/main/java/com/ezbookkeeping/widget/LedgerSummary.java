@@ -1,4 +1,4 @@
-package com.easybookkeeping.widget;
+package com.ezbookkeeping.widget;
 
 import java.util.Calendar;
 import java.util.List;

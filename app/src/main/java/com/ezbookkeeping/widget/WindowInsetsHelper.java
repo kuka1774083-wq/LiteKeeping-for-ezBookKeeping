@@ -1,4 +1,4 @@
-package com.easybookkeeping.widget;
+package com.ezbookkeeping.widget;
 
 import android.os.Build;
 import android.view.View;

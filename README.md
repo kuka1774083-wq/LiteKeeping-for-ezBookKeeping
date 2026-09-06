@@ -1,6 +1,6 @@
-# LiteKeeping for EasyBookKeeping
+# LiteKeeping for ezBookkeeping
 
-LiteKeeping for EasyBookKeeping 是一个连接 ezBookkeeping 官方 Docker 版服务的 Android 轻量记账应用，并提供 Android 桌面小组件，让记账可以顺手完成。
+LiteKeeping for ezBookkeeping 是一个连接 ezBookkeeping 官方 Docker 版服务的 Android 轻量记账应用，并提供 Android 桌面小组件，让记账可以顺手完成。
 
 ## 使用前提
 
@@ -41,4 +41,4 @@ $env:GRADLE_USER_HOME = 'D:\MyFiles\Softwares\Android Dev\gradle-home'
 
 ## 版本
 
-当前版本：`1.0.0`。
+当前版本：`1.0.1`。

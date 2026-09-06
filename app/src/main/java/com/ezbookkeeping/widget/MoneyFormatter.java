@@ -1,4 +1,4 @@
-package com.easybookkeeping.widget;
+package com.ezbookkeeping.widget;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
