@@ -70,11 +70,11 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         views.setTextViewText(R.id.widget_period_label, context.getString(month ? R.string.widget_month_expense : R.string.widget_today_expense));
         views.setTextViewText(R.id.widget_balance, MoneyFormatter.format(month ? summary.month : summary.today, summary.currency));
         if (SecureSettings.isConfigured(context)) {
-            views.setTextViewText(R.id.widget_income, "已连接服务器");
-            views.setTextViewText(R.id.widget_expense, "点击切换周期");
+            views.setViewVisibility(R.id.widget_income, android.view.View.GONE);
+            views.setViewVisibility(R.id.widget_expense, android.view.View.GONE);
         } else {
-            views.setTextViewText(R.id.widget_income, "轻触打开并登录");
-            views.setTextViewText(R.id.widget_expense, "");
+            views.setViewVisibility(R.id.widget_income, android.view.View.GONE);
+            views.setViewVisibility(R.id.widget_expense, android.view.View.GONE);
         }
         views.setOnClickPendingIntent(R.id.widget_root, activityIntent(context, null, 0));
         views.setOnClickPendingIntent(R.id.widget_expense_button, activityIntent(context, "expense", 1));
@@ -90,7 +90,8 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         for (ApiModels.RemoteTransaction row : rows) if (row.type == 3) {
             Calendar t = Calendar.getInstance(); t.setTimeInMillis(row.timeSeconds * 1000L);
             if (!row.currency.isEmpty()) currency = row.currency;
-            if (t.get(Calendar.YEAR) == now.get(Calendar.YEAR) && t.get(Calendar.MONTH) == now.get(Calendar.MONTH)) { month += row.sourceAmount; if (t.get(Calendar.DAY_OF_MONTH) == now.get(Calendar.DAY_OF_MONTH)) today += row.sourceAmount; }
+            long expense = Math.abs(row.sourceAmount);
+            if (t.get(Calendar.YEAR) == now.get(Calendar.YEAR) && t.get(Calendar.MONTH) == now.get(Calendar.MONTH)) { month += expense; if (t.get(Calendar.DAY_OF_MONTH) == now.get(Calendar.DAY_OF_MONTH)) today += expense; }
         }
         context.getSharedPreferences(PREF_WIDGET, 0).edit().putLong("today", today).putLong("month", month).putString("currency", currency).apply();
     }

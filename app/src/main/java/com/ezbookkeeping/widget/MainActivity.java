@@ -57,6 +57,10 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle state) {
+        String quickAdd = getIntent().getStringExtra(EXTRA_QUICK_ADD);
+        if (quickAdd != null) {
+            setTheme(android.R.style.Theme_DeviceDefault_Light_Dialog_Alert);
+        }
         super.onCreate(state);
         spacing = Math.round(16 * getResources().getDisplayMetrics().density);
         render();

@@ -49,6 +49,7 @@ final class SecureSettings {
                 .remove(KEY_TOKEN)
                 .remove(KEY_ACCOUNT_CACHE)
                 .apply();
+        WebViewActivity.clearWebSession();
     }
 
     static void saveAccountCache(Context context, String json) {
@@ -132,4 +133,3 @@ final class SecureSettings {
         return generator.generateKey();
     }
 }
-

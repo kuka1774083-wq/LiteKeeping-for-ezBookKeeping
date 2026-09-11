@@ -15,6 +15,8 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.CookieManager;
+import android.webkit.WebStorage;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -26,6 +28,19 @@ import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
 public class WebViewActivity extends Activity {
+    private static WebView activeWebView;
+    static void clearWebSession() {
+        CookieManager cookies = CookieManager.getInstance();
+        cookies.removeAllCookies(null);
+        cookies.flush();
+        WebStorage.getInstance().deleteAllData();
+        if (activeWebView != null) {
+            activeWebView.clearCache(true);
+            activeWebView.clearHistory();
+            activeWebView.clearFormData();
+            activeWebView.evaluateJavascript("try{localStorage.clear();sessionStorage.clear();}catch(e){}", null);
+        }
+    }
     public static final String EXTRA_WEB_PATH = "web_path";
     private WebView webView;
     private ProgressBar progress;
@@ -90,6 +105,7 @@ public class WebViewActivity extends Activity {
         ));
 
         webView = new WebView(this);
+        activeWebView = webView;
         root.addView(webView, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 0,
@@ -202,6 +218,7 @@ public class WebViewActivity extends Activity {
             webView.setWebChromeClient(null);
             webView.setWebViewClient(null);
             webView.destroy();
+            if (activeWebView == webView) activeWebView = null;
         }
         super.onDestroy();
     }
