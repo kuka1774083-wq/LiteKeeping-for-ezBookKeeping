@@ -117,6 +117,18 @@ final class ApiModels {
         }
     }
 
+    static final class SpendingSummary {
+        final long today;
+        final long month;
+        final String currency;
+
+        SpendingSummary(long today, long month, String currency) {
+            this.today = today;
+            this.month = month;
+            this.currency = currency;
+        }
+    }
+
     static final class GeoLocation {
         final double latitude;
         final double longitude;

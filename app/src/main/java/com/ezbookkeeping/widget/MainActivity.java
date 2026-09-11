@@ -298,14 +298,6 @@ public class MainActivity extends Activity {
             return;
         }
         pendingLocationMode = mode;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasLocationPermission()) {
-            toast("记账前需要获取当前位置，请在系统提示中允许位置权限");
-            requestPermissions(new String[] {
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-            }, LOCATION_PERMISSION_REQUEST);
-            return;
-        }
         loadEntryForm(mode);
     }
 
@@ -323,10 +315,9 @@ public class MainActivity extends Activity {
     }
 
     private void loadEntryForm(int mode) {
-        toast("正在读取账户、分类和当前位置…");
+        toast("正在读取账户和分类…");
         networkExecutor.execute(() -> {
             try {
-                ApiModels.GeoLocation location = captureLocation();
                 ApiModels.ReferenceData data = ApiClient.configured(this).loadReferenceData();
                 if (data.accountGroups.isEmpty()) {
                     throw new ApiClient.ApiException("没有可用账户");
@@ -338,7 +329,7 @@ public class MainActivity extends Activity {
                 if (mode == TYPE_TRANSFER && countAccounts(data.accountGroups) < 2) {
                     throw new ApiClient.ApiException("转账至少需要两个可用账户");
                 }
-                runOnUiThread(() -> showEntryDialog(mode, data, categories, location));
+                runOnUiThread(() -> showEntryDialog(mode, data, categories, null));
             } catch (Exception exception) {
                 runOnUiThread(() -> toast("读取失败：" + message(exception)));
             }
@@ -550,7 +541,23 @@ public class MainActivity extends Activity {
             long timeMillis,
             ApiModels.GeoLocation location
     ) {
-        String locationText = location == null
+        if (location == null) {
+            ApiModels.GeoLocation current = captureLocation();
+            if (current != null) {
+                confirmSubmit(formDialog, mode, source, destinationId, destinationAmount, category, sourceAmount, tagIds, comment, timeMillis, current);
+                return;
+            }
+            new AlertDialog.Builder(this)
+                    .setTitle("无法获取当前位置")
+                    .setMessage("获取位置失败，是否仍要提交？")
+                    .setNegativeButton("取消", (d, w) -> formDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true))
+                    .setNeutralButton("重试获取位置", (d, w) -> confirmSubmit(formDialog, mode, source, destinationId, destinationAmount, category, sourceAmount, tagIds, comment, timeMillis, null))
+                    .setPositiveButton("继续提交", (d, w) -> confirmSubmit(formDialog, mode, source, destinationId, destinationAmount, category, sourceAmount, tagIds, comment, timeMillis, new ApiModels.GeoLocation(Double.NaN, Double.NaN)))
+                    .show();
+            return;
+        }
+        boolean noLocation = location == null || Double.isNaN(location.latitude);
+        String locationText = noLocation
                 ? "不上传位置"
                 : "上传位置 " + location.displayValue();
         new AlertDialog.Builder(this)
@@ -564,7 +571,7 @@ public class MainActivity extends Activity {
                         formDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true))
                 .setPositiveButton("确认上传", (dialog, which) -> submitEntry(
                         formDialog, mode, source, destinationId, destinationAmount,
-                        category, sourceAmount, tagIds, comment, timeMillis, location
+                        category, sourceAmount, tagIds, comment, timeMillis, noLocation ? null : location
                 ))
                 .setOnCancelListener(dialog ->
                         formDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true))

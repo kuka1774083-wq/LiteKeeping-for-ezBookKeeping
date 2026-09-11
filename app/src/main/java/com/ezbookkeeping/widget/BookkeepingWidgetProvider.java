@@ -7,12 +7,23 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import java.util.Calendar;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class BookkeepingWidgetProvider extends AppWidgetProvider {
     private static final ExecutorService NETWORK_EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final String ACTION_TOGGLE_PERIOD = "com.ezbookkeeping.widget.TOGGLE_PERIOD";
+    private static final String PREF_WIDGET = "widget_state";
+
+    @Override public void onEnabled(Context context) { scheduleRefresh(context); }
+    @Override public void onDisabled(Context context) {
+        AlarmManager alarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        if (alarm != null) alarm.cancel(refreshIntent(context));
+    }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
@@ -23,7 +34,14 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
             PendingResult pendingResult = goAsync();
             NETWORK_EXECUTOR.execute(() -> {
                 try {
-                    ApiClient.configured(context).refreshAccountSummary(context);
+                    ApiClient client = ApiClient.configured(context);
+                    Exception last = null;
+                    for (int attempt = 0; attempt < 3; attempt++) {
+                        try { client.refreshAccountSummary(context); last = null; break; }
+                        catch (Exception error) { last = error; try { Thread.sleep(350L * (attempt + 1)); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); } }
+                    }
+                    if (last != null) throw last;
+                    saveSpending(context, client.loadRecentTransactions());
                     for (int appWidgetId : appWidgetIds) {
                         manager.updateAppWidget(appWidgetId, createViews(context));
                     }
@@ -46,12 +64,14 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
     }
 
     private static RemoteViews createViews(Context context) {
-        ApiModels.AccountSummary summary = ApiClient.cachedAccountSummary(context);
+        ApiModels.SpendingSummary summary = cachedSpending(context);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_bookkeeping);
-        views.setTextViewText(R.id.widget_balance, MoneyFormatter.format(summary.balance));
+        boolean month = context.getSharedPreferences(PREF_WIDGET, 0).getBoolean("month", false);
+        views.setTextViewText(R.id.widget_period_label, context.getString(month ? R.string.widget_month_expense : R.string.widget_today_expense));
+        views.setTextViewText(R.id.widget_balance, MoneyFormatter.format(month ? summary.month : summary.today, summary.currency));
         if (SecureSettings.isConfigured(context)) {
             views.setTextViewText(R.id.widget_income, "已连接服务器");
-            views.setTextViewText(R.id.widget_expense, summary.count + " 个账户");
+            views.setTextViewText(R.id.widget_expense, "点击切换周期");
         } else {
             views.setTextViewText(R.id.widget_income, "轻触打开并登录");
             views.setTextViewText(R.id.widget_expense, "");
@@ -61,7 +81,27 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.widget_income_button, activityIntent(context, "income", 2));
         views.setOnClickPendingIntent(R.id.widget_transfer_button, activityIntent(context, "transfer", 3));
         views.setOnClickPendingIntent(R.id.widget_web_button, webIntent(context));
+        views.setOnClickPendingIntent(R.id.widget_period_toggle, toggleIntent(context));
         return views;
+    }
+
+    private static void saveSpending(Context context, java.util.List<ApiModels.RemoteTransaction> rows) {
+        Calendar now = Calendar.getInstance(); long today = 0, month = 0; String currency = "CNY";
+        for (ApiModels.RemoteTransaction row : rows) if (row.type == 3) {
+            Calendar t = Calendar.getInstance(); t.setTimeInMillis(row.timeSeconds * 1000L);
+            if (!row.currency.isEmpty()) currency = row.currency;
+            if (t.get(Calendar.YEAR) == now.get(Calendar.YEAR) && t.get(Calendar.MONTH) == now.get(Calendar.MONTH)) { month += row.sourceAmount; if (t.get(Calendar.DAY_OF_MONTH) == now.get(Calendar.DAY_OF_MONTH)) today += row.sourceAmount; }
+        }
+        context.getSharedPreferences(PREF_WIDGET, 0).edit().putLong("today", today).putLong("month", month).putString("currency", currency).apply();
+    }
+    private static ApiModels.SpendingSummary cachedSpending(Context context) { android.content.SharedPreferences p = context.getSharedPreferences(PREF_WIDGET, 0); return new ApiModels.SpendingSummary(p.getLong("today", 0), p.getLong("month", 0), p.getString("currency", "CNY")); }
+    private static PendingIntent toggleIntent(Context context) { Intent i = new Intent(context, BookkeepingWidgetProvider.class).setAction(ACTION_TOGGLE_PERIOD); return PendingIntent.getBroadcast(context, 5, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE); }
+    private static PendingIntent refreshIntent(Context context) { Intent i = new Intent(context, BookkeepingWidgetProvider.class).setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE); return PendingIntent.getBroadcast(context, 6, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE); }
+    private static void scheduleRefresh(Context context) { AlarmManager alarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE); if (alarm != null) alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60000L, 15 * 60000L, refreshIntent(context)); }
+
+    @Override public void onReceive(Context context, Intent intent) {
+        if (ACTION_TOGGLE_PERIOD.equals(intent.getAction())) { android.content.SharedPreferences p = context.getSharedPreferences(PREF_WIDGET, 0); p.edit().putBoolean("month", !p.getBoolean("month", false)).apply(); refreshAll(context); return; }
+        super.onReceive(context, intent);
     }
 
     private static PendingIntent activityIntent(Context context, String quickAdd, int requestCode) {
