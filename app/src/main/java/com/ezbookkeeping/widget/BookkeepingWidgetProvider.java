@@ -44,14 +44,12 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
                     saveSpending(context, client.loadRecentTransactions());
                     for (int appWidgetId : appWidgetIds) {
                         RemoteViews views = createViews(context);
-                        views.setViewVisibility(R.id.widget_loading, android.view.View.GONE);
                         manager.updateAppWidget(appWidgetId, views);
                     }
                 } catch (Exception ignored) {
                     // Keep showing the last encrypted cache while the server is unavailable.
                     for (int appWidgetId : appWidgetIds) {
                         RemoteViews views = createViews(context);
-                        views.setViewVisibility(R.id.widget_loading, android.view.View.GONE);
                         manager.updateAppWidget(appWidgetId, views);
                     }
                 } finally {
@@ -77,7 +75,6 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         views.setTextViewText(R.id.widget_period_label, context.getString(month ? R.string.widget_month_expense : R.string.widget_today_expense));
         views.setInt(R.id.widget_period_label, "setBackgroundResource", month ? R.drawable.widget_period_month : R.drawable.widget_period_today);
         views.setTextViewText(R.id.widget_balance, MoneyFormatter.format(month ? summary.month : summary.today, summary.currency));
-        views.setViewVisibility(R.id.widget_loading, SecureSettings.isConfigured(context) ? android.view.View.VISIBLE : android.view.View.GONE);
         if (SecureSettings.isConfigured(context)) {
             views.setViewVisibility(R.id.widget_income, android.view.View.GONE);
             views.setViewVisibility(R.id.widget_expense, android.view.View.GONE);

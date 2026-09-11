@@ -21,6 +21,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -107,6 +108,9 @@ public class MainActivity extends Activity {
         if (quickEntryMode) {
             FrameLayout transparentRoot = new FrameLayout(this);
             transparentRoot.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            content = new LinearLayout(this);
+            content.setGravity(Gravity.CENTER);
+            transparentRoot.addView(content, new FrameLayout.LayoutParams(-1, -1));
             setContentView(transparentRoot);
             return;
         }
@@ -156,6 +160,12 @@ public class MainActivity extends Activity {
         title.setPadding(0, spacing / 2, 0, spacing / 2);
         content.addView(title);
         addRemoteEntries();
+        if (transactionsLoading) {
+            ProgressBar spinner = new ProgressBar(this);
+            spinner.setIndeterminate(true);
+            spinner.setPadding(0, spacing, 0, spacing);
+            content.addView(spinner, 0);
+        }
         setContentView(scroll);
     }
 
@@ -335,6 +345,7 @@ public class MainActivity extends Activity {
 
     private void loadEntryForm(int mode) {
         toast("正在读取账户和分类…");
+        showQuickLoading();
         networkExecutor.execute(() -> {
             try {
                 ApiModels.ReferenceData data = ApiClient.configured(this).loadReferenceData();
@@ -353,6 +364,14 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> toast("读取失败：" + message(exception)));
             }
         });
+    }
+
+    private void showQuickLoading() {
+        if (!quickEntryMode || content == null) return;
+        ProgressBar spinner = new ProgressBar(this);
+        spinner.setIndeterminate(true);
+        content.removeAllViews();
+        content.addView(spinner, new LinearLayout.LayoutParams(-1, 120));
     }
 
     private boolean hasLocationPermission() {
