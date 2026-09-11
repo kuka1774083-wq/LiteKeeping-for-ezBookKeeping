@@ -68,6 +68,20 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         }
     }
 
+    static void syncNow(Context context) {
+        if (!SecureSettings.isConfigured(context)) return;
+        NETWORK_EXECUTOR.execute(() -> {
+            try {
+                ApiClient client = ApiClient.configured(context);
+                client.refreshAccountSummary(context);
+                saveSpending(context, client.loadRecentTransactions());
+                refreshAll(context);
+            } catch (Exception ignored) {
+                // Keep cached values when the network is temporarily unavailable.
+            }
+        });
+    }
+
     private static RemoteViews createViews(Context context) {
         ApiModels.SpendingSummary summary = cachedSpending(context);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_bookkeeping);

@@ -210,6 +210,7 @@ public class WebViewActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        BookkeepingWidgetProvider.syncNow(this);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && backCallback != null) {
             getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backCallback);
         }
