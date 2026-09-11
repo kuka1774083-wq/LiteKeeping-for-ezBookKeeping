@@ -30,8 +30,10 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
             RemoteViews initial = createViews(context);
-            initial.setViewVisibility(R.id.widget_balance, android.view.View.GONE);
-            initial.setViewVisibility(R.id.widget_refresh_progress, android.view.View.VISIBLE);
+            if (SecureSettings.isConfigured(context)) {
+                initial.setViewVisibility(R.id.widget_balance, android.view.View.GONE);
+                initial.setViewVisibility(R.id.widget_refresh_progress, android.view.View.VISIBLE);
+            }
             manager.updateAppWidget(appWidgetId, initial);
         }
         if (SecureSettings.isConfigured(context)) {

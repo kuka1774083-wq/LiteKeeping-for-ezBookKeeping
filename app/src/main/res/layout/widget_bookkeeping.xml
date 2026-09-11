@@ -59,6 +59,14 @@
         android:textSize="28sp"
         android:textStyle="bold" />
 
+    <ProgressBar
+        android:id="@+id/widget_refresh_progress"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="start"
+        android:indeterminate="true"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -103,13 +111,6 @@
             android:textColor="#FFFFFF"
             android:textSize="14sp"
             android:textStyle="bold" />
-        <ProgressBar
-            android:id="@+id/widget_refresh_progress"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
-            android:indeterminate="true"
-            android:visibility="gone" />
-
         <TextView
             android:id="@+id/widget_income_button"
             android:layout_width="0dp"
