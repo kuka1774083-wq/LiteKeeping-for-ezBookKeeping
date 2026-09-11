@@ -91,7 +91,7 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         return views;
     }
 
-    private static void saveSpending(Context context, java.util.List<ApiModels.RemoteTransaction> rows) {
+    static void saveSpending(Context context, java.util.List<ApiModels.RemoteTransaction> rows) {
         Calendar now = Calendar.getInstance(); long today = 0, month = 0; String currency = "CNY";
         for (ApiModels.RemoteTransaction row : rows) if (row.type == 3) {
             Calendar t = Calendar.getInstance(); t.setTimeInMillis(row.timeSeconds * 1000L);

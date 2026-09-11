@@ -22,6 +22,8 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
+import android.app.Dialog;
+import android.graphics.drawable.GradientDrawable;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -59,6 +61,7 @@ public class MainActivity extends Activity {
     private boolean quickEntryMode;
     private TextView pendingLocationView;
     private ApiModels.GeoLocation currentLocation;
+    private Dialog loadingDialog;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -368,10 +371,41 @@ public class MainActivity extends Activity {
 
     private void showQuickLoading() {
         if (!quickEntryMode || content == null) return;
+        showLoadingOverlay();
+    }
+
+    private void showLoadingOverlay() {
+        if (loadingDialog != null && loadingDialog.isShowing()) return;
+        LinearLayout panel = new LinearLayout(this);
+        panel.setGravity(Gravity.CENTER);
+        panel.setPadding(spacing * 2, spacing * 2, spacing * 2, spacing * 2);
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(0xFFFFFFFF);
+        background.setCornerRadius(spacing);
+        panel.setBackground(background);
         ProgressBar spinner = new ProgressBar(this);
         spinner.setIndeterminate(true);
-        content.removeAllViews();
-        content.addView(spinner, new LinearLayout.LayoutParams(-1, 120));
+        spinner.getIndeterminateDrawable().setColorFilter(0xff557eae, android.graphics.PorterDuff.Mode.SRC_IN);
+        panel.addView(spinner, new LinearLayout.LayoutParams(spacing * 3, spacing * 3));
+        loadingDialog = new Dialog(this);
+        loadingDialog.setContentView(panel);
+        loadingDialog.setCancelable(false);
+        android.view.Window window = loadingDialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+            android.view.WindowManager.LayoutParams attrs = window.getAttributes();
+            attrs.dimAmount = 0.55f;
+            window.setAttributes(attrs);
+        }
+        loadingDialog.show();
+    }
+
+    private void hideLoadingOverlay() {
+        if (loadingDialog != null) {
+            loadingDialog.dismiss();
+            loadingDialog = null;
+        }
     }
 
     private boolean hasLocationPermission() {
@@ -673,8 +707,10 @@ public class MainActivity extends Activity {
                 );
                 client.refreshAccountSummary(this);
                 List<ApiModels.RemoteTransaction> remote = client.loadRecentTransactions();
+                BookkeepingWidgetProvider.saveSpending(this, remote);
                 BookkeepingWidgetProvider.refreshAll(this);
                 runOnUiThread(() -> {
+                    hideLoadingOverlay();
                     recentTransactions = remote;
                     dialog.dismiss();
                     if (quickEntryMode) finishAndRemoveTask();
@@ -683,6 +719,7 @@ public class MainActivity extends Activity {
                 });
             } catch (Exception exception) {
                 runOnUiThread(() -> {
+                    hideLoadingOverlay();
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(true);
                     toast("提交失败：" + message(exception));
                 });
@@ -695,6 +732,7 @@ public class MainActivity extends Activity {
             return;
         }
         transactionsLoading = true;
+        showLoadingOverlay();
         if (!announce && recentTransactions.isEmpty()) {
             toast("正在同步云端数据，请稍候…");
         }
@@ -708,6 +746,7 @@ public class MainActivity extends Activity {
                 List<ApiModels.RemoteTransaction> remote = client.loadRecentTransactions();
                 BookkeepingWidgetProvider.refreshAll(this);
                 runOnUiThread(() -> {
+                    hideLoadingOverlay();
                     recentTransactions = remote;
                     transactionsLoading = false;
                     render();
@@ -718,6 +757,7 @@ public class MainActivity extends Activity {
             } catch (Exception exception) {
                 transactionsLoading = false;
                 runOnUiThread(() -> {
+                    hideLoadingOverlay();
                     render();
                     if (announce) {
                         toast("同步失败：" + message(exception));
