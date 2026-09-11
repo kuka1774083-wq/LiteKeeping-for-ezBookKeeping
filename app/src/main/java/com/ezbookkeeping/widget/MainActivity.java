@@ -470,6 +470,9 @@ public class MainActivity extends Activity {
                 .setNegativeButton("取消", null)
                 .setPositiveButton("提交", null)
                 .create();
+        dialog.setOnCancelListener(ignored -> {
+            if (quickEntryMode) finish();
+        });
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                 .setOnClickListener(view -> {
                     try {
@@ -622,6 +625,7 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     recentTransactions = remote;
                     dialog.dismiss();
+                    if (quickEntryMode) finish();
                     render();
                     toast(mode == TYPE_TRANSFER ? "转账已上传服务器" : "账单已上传服务器");
                 });
@@ -639,6 +643,9 @@ public class MainActivity extends Activity {
             return;
         }
         transactionsLoading = true;
+        if (!announce && recentTransactions.isEmpty()) {
+            toast("正在同步云端数据，请稍候…");
+        }
         if (announce) {
             render();
         }
