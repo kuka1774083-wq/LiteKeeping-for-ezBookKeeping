@@ -56,6 +56,7 @@ public class MainActivity extends Activity {
     private boolean transactionsLoading;
     private float lastTouchY;
     private boolean quickEntryMode;
+    private TextView pendingLocationView;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -321,6 +322,12 @@ public class MainActivity extends Activity {
         pendingLocationMode = -1;
         if (mode >= 0) {
             loadEntryForm(mode);
+            return;
+        }
+        ApiModels.GeoLocation location = captureLocation();
+        if (location != null && pendingLocationView != null) {
+            pendingLocationView.setText("当前位置：" + location.displayValue());
+            pendingLocationView.setTextColor(0xff16865c);
         }
     }
 
@@ -459,11 +466,11 @@ public class MainActivity extends Activity {
         );
         locationView.setPadding(0, spacing / 2, 0, spacing);
         form.addView(locationView);
+        pendingLocationView = locationView;
 
         final Spinner finalDestinationGroup = destinationGroup;
         final Spinner finalDestinationAccount = destinationAccount;
         final Calendar finalTransactionTime = transactionTime;
-        final ApiModels.GeoLocation finalLocation = location;
         AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(titleForMode(mode))
                 .setView(form)
@@ -505,17 +512,23 @@ public class MainActivity extends Activity {
                         confirmSubmit(dialog, mode, source, destinationId, destinationValue,
                                 selectedCategory, sourceAmount, selectedTagIds,
                                 note.getText().toString().trim(),
-                                finalTransactionTime.getTimeInMillis(), finalLocation);
+                                finalTransactionTime.getTimeInMillis(), captureLocation());
                     } catch (IllegalArgumentException exception) {
                         toast(exception.getMessage());
                     }
                 }));
         dialog.show();
         if (quickEntryMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasLocationPermission()) {
+            pendingLocationMode = -1;
             requestPermissions(new String[] {
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
             }, LOCATION_PERMISSION_REQUEST);
+        }
+        ApiModels.GeoLocation initialLocation = captureLocation();
+        if (initialLocation != null && pendingLocationView != null) {
+            pendingLocationView.setText("当前位置：" + initialLocation.displayValue());
+            pendingLocationView.setTextColor(0xff16865c);
         }
         amount.requestFocus();
     }
