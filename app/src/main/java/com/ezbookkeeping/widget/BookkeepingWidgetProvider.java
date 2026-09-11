@@ -68,6 +68,7 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_bookkeeping);
         boolean month = context.getSharedPreferences(PREF_WIDGET, 0).getBoolean("period_month", false);
         views.setTextViewText(R.id.widget_period_label, context.getString(month ? R.string.widget_month_expense : R.string.widget_today_expense));
+        views.setInt(R.id.widget_period_label, "setBackgroundResource", month ? R.drawable.widget_period_month : R.drawable.widget_period_today);
         views.setTextViewText(R.id.widget_balance, MoneyFormatter.format(month ? summary.month : summary.today, summary.currency));
         if (SecureSettings.isConfigured(context)) {
             views.setViewVisibility(R.id.widget_income, android.view.View.GONE);

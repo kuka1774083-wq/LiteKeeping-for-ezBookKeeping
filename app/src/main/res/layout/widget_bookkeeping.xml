@@ -20,7 +20,7 @@
             android:layout_weight="1"
             android:id="@+id/widget_period_label"
             android:text="@string/widget_today_expense"
-            android:textColor="#6B7280"
+            android:textColor="#FFFFFF"
             android:textSize="12sp" />
 
         <ImageView
@@ -30,7 +30,7 @@
             android:contentDescription="@string/open_ezbookkeeping"
             android:padding="3dp"
             android:scaleType="centerInside"
-            android:src="@drawable/spinner_arrow" />
+            android:src="@drawable/widget_period_toggle" />
 
         <ImageView
             android:id="@+id/widget_web_button"
