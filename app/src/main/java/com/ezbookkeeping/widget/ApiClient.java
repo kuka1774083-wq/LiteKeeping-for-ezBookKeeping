@@ -39,7 +39,7 @@ final class ApiClient {
         body.put("loginName", loginName.trim());
         body.put("password", password);
         JSONObject result = client.request("POST", "/authorize.json", body).getJSONObject("result");
-        if (result.optBoolean("need2FA", false)) {
+        if (successValue(result.opt("need2FA"))) {
             throw new ApiException("该账户需要两步验证，小组件暂不支持登录");
         }
         String token = result.optString("token", "");
@@ -301,11 +301,17 @@ final class ApiClient {
         } catch (JSONException exception) {
             throw new ApiException("服务器返回了无法解析的响应（HTTP " + status + "）");
         }
-        if (status < 200 || status >= 300 || !json.optBoolean("success", false)) {
+        if (status < 200 || status >= 300 || !successValue(json.opt("success"))) {
             String message = json.optString("errorMessage", "请求失败（HTTP " + status + "）");
             throw new ApiException(message);
         }
         return json;
+    }
+
+    private static boolean successValue(Object value) {
+        if (value instanceof Boolean) return (Boolean) value;
+        if (value instanceof Number) return ((Number) value).intValue() != 0;
+        return "true".equalsIgnoreCase(String.valueOf(value)) || "1".equals(String.valueOf(value));
     }
 
     private static String readAll(InputStream stream) throws Exception {
@@ -352,7 +358,7 @@ final class ApiClient {
         String id = item.getString("id");
         String name = item.optString("name", "未命名账户");
         String currency = item.optString("currency", "CNY");
-        boolean hidden = item.optBoolean("hidden", false);
+        boolean hidden = successValue(item.opt("hidden"));
         if (!hidden && !"---".equals(currency)) {
             destination.add(new ApiModels.Account(
                     id,
@@ -425,7 +431,7 @@ final class ApiClient {
         }
         for (int i = 0; i < array.length(); i++) {
             JSONObject item = array.getJSONObject(i);
-            if (!item.optBoolean("hidden", false)) {
+            if (!successValue(item.opt("hidden"))) {
                 result.add(new ApiModels.Tag(
                         item.getString("id"),
                         item.optString("name", "未命名标签"),
