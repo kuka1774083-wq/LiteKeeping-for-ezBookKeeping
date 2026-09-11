@@ -22,6 +22,11 @@
         </activity>
 
         <activity
+            android:name=".QuickAddActivity"
+            android:exported="false"
+            android:theme="@style/Theme.EzBookKeeping.Dialog" />
+
+        <activity
             android:name=".WebViewActivity"
             android:exported="false" />
 
