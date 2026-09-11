@@ -57,6 +57,7 @@ public class MainActivity extends Activity {
     private float lastTouchY;
     private boolean quickEntryMode;
     private TextView pendingLocationView;
+    private ApiModels.GeoLocation currentLocation;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -326,6 +327,7 @@ public class MainActivity extends Activity {
         }
         ApiModels.GeoLocation location = captureLocation();
         if (location != null && pendingLocationView != null) {
+            currentLocation = location;
             pendingLocationView.setText("当前位置：" + location.displayValue());
             pendingLocationView.setTextColor(0xff16865c);
         }
@@ -512,7 +514,7 @@ public class MainActivity extends Activity {
                         confirmSubmit(dialog, mode, source, destinationId, destinationValue,
                                 selectedCategory, sourceAmount, selectedTagIds,
                                 note.getText().toString().trim(),
-                                finalTransactionTime.getTimeInMillis(), captureLocation());
+                                finalTransactionTime.getTimeInMillis(), currentLocation != null ? currentLocation : captureLocation());
                     } catch (IllegalArgumentException exception) {
                         toast(exception.getMessage());
                     }
@@ -527,6 +529,7 @@ public class MainActivity extends Activity {
         }
         ApiModels.GeoLocation initialLocation = captureLocation();
         if (initialLocation != null && pendingLocationView != null) {
+            currentLocation = initialLocation;
             pendingLocationView.setText("当前位置：" + initialLocation.displayValue());
             pendingLocationView.setTextColor(0xff16865c);
         }
@@ -579,6 +582,11 @@ public class MainActivity extends Activity {
             long timeMillis,
             ApiModels.GeoLocation location
     ) {
+        if (location != null && !Double.isNaN(location.latitude)) {
+            submitEntry(formDialog, mode, source, destinationId, destinationAmount,
+                    category, sourceAmount, tagIds, comment, timeMillis, location);
+            return;
+        }
         if (location == null) {
             ApiModels.GeoLocation current = captureLocation();
             if (current != null) {
