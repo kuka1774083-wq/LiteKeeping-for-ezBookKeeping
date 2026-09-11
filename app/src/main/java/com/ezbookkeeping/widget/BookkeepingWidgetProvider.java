@@ -66,7 +66,7 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
     private static RemoteViews createViews(Context context) {
         ApiModels.SpendingSummary summary = cachedSpending(context);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_bookkeeping);
-        boolean month = context.getSharedPreferences(PREF_WIDGET, 0).getBoolean("month", false);
+        boolean month = context.getSharedPreferences(PREF_WIDGET, 0).getBoolean("period_month", false);
         views.setTextViewText(R.id.widget_period_label, context.getString(month ? R.string.widget_month_expense : R.string.widget_today_expense));
         views.setTextViewText(R.id.widget_balance, MoneyFormatter.format(month ? summary.month : summary.today, summary.currency));
         if (SecureSettings.isConfigured(context)) {
@@ -101,7 +101,7 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
     private static void scheduleRefresh(Context context) { AlarmManager alarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE); if (alarm != null) alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60000L, 15 * 60000L, refreshIntent(context)); }
 
     @Override public void onReceive(Context context, Intent intent) {
-        if (ACTION_TOGGLE_PERIOD.equals(intent.getAction())) { android.content.SharedPreferences p = context.getSharedPreferences(PREF_WIDGET, 0); p.edit().putBoolean("month", !p.getBoolean("month", false)).apply(); refreshAll(context); return; }
+        if (ACTION_TOGGLE_PERIOD.equals(intent.getAction())) { android.content.SharedPreferences p = context.getSharedPreferences(PREF_WIDGET, 0); p.edit().putBoolean("period_month", !p.getBoolean("period_month", false)).apply(); refreshAll(context); return; }
         super.onReceive(context, intent);
     }
 
