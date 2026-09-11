@@ -658,9 +658,12 @@ public class MainActivity extends Activity {
                 });
             } catch (Exception exception) {
                 transactionsLoading = false;
-                if (announce) {
-                    runOnUiThread(() -> toast("同步失败：" + message(exception)));
-                }
+                runOnUiThread(() -> {
+                    render();
+                    if (announce) {
+                        toast("同步失败：" + message(exception));
+                    }
+                });
             }
         });
     }
