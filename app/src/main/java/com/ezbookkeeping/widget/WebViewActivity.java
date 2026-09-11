@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.os.Handler;
 
 import org.json.JSONObject;
 
@@ -48,6 +49,8 @@ public class WebViewActivity extends Activity {
     private OnBackInvokedCallback backCallback;
     private boolean autoLoginNavigationDone;
     private String initialPath = "/";
+    private final Handler touchSyncHandler = new Handler();
+    private final Runnable touchSync = () -> BookkeepingWidgetProvider.syncNow(this);
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -134,6 +137,11 @@ public class WebViewActivity extends Activity {
                 progress.setProgress(newProgress);
                 progress.setVisibility(newProgress >= 100 ? View.GONE : View.VISIBLE);
             }
+        });
+        webView.setOnTouchListener((v, event) -> {
+            touchSyncHandler.removeCallbacks(touchSync);
+            touchSyncHandler.postDelayed(touchSync, 200L);
+            return false;
         });
         webView.setWebViewClient(new WebViewClient() {
             @Override

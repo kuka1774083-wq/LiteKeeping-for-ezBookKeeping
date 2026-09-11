@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 public class BookkeepingWidgetProvider extends AppWidgetProvider {
     private static final ExecutorService NETWORK_EXECUTOR = Executors.newSingleThreadExecutor();
     private static final String ACTION_TOGGLE_PERIOD = "com.ezbookkeeping.widget.TOGGLE_PERIOD";
+    private static final String ACTION_REFRESH = "com.ezbookkeeping.widget.REFRESH";
     private static final String PREF_WIDGET = "widget_state";
 
     @Override public void onEnabled(Context context) { scheduleRefresh(context); }
@@ -28,7 +29,10 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
     @Override
     public void onUpdate(Context context, AppWidgetManager manager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
-            manager.updateAppWidget(appWidgetId, createViews(context));
+            RemoteViews initial = createViews(context);
+            initial.setViewVisibility(R.id.widget_balance, android.view.View.GONE);
+            initial.setViewVisibility(R.id.widget_refresh_progress, android.view.View.VISIBLE);
+            manager.updateAppWidget(appWidgetId, initial);
         }
         if (SecureSettings.isConfigured(context)) {
             PendingResult pendingResult = goAsync();
@@ -44,12 +48,14 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
                     saveSpending(context, client.loadRecentTransactions());
                     for (int appWidgetId : appWidgetIds) {
                         RemoteViews views = createViews(context);
+                        views.setViewVisibility(R.id.widget_refresh_progress, android.view.View.GONE);
                         manager.updateAppWidget(appWidgetId, views);
                     }
                 } catch (Exception ignored) {
                     // Keep showing the last encrypted cache while the server is unavailable.
                     for (int appWidgetId : appWidgetIds) {
                         RemoteViews views = createViews(context);
+                        views.setViewVisibility(R.id.widget_refresh_progress, android.view.View.GONE);
                         manager.updateAppWidget(appWidgetId, views);
                     }
                 } finally {
@@ -102,6 +108,7 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         views.setOnClickPendingIntent(R.id.widget_transfer_button, activityIntent(context, "transfer", 3));
         views.setOnClickPendingIntent(R.id.widget_web_button, webIntent(context));
         views.setOnClickPendingIntent(R.id.widget_period_toggle, toggleIntent(context));
+        views.setOnClickPendingIntent(R.id.widget_refresh_button, refreshIntent(context));
         return views;
     }
 
@@ -117,10 +124,11 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
     }
     private static ApiModels.SpendingSummary cachedSpending(Context context) { android.content.SharedPreferences p = context.getSharedPreferences(PREF_WIDGET, 0); return new ApiModels.SpendingSummary(p.getLong("today", 0), p.getLong("month", 0), p.getString("currency", "CNY")); }
     private static PendingIntent toggleIntent(Context context) { Intent i = new Intent(context, BookkeepingWidgetProvider.class).setAction(ACTION_TOGGLE_PERIOD); return PendingIntent.getBroadcast(context, 5, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE); }
-    private static PendingIntent refreshIntent(Context context) { Intent i = new Intent(context, BookkeepingWidgetProvider.class).setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE); return PendingIntent.getBroadcast(context, 6, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE); }
+    private static PendingIntent refreshIntent(Context context) { Intent i = new Intent(context, BookkeepingWidgetProvider.class).setAction(ACTION_REFRESH); return PendingIntent.getBroadcast(context, 6, i, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE); }
     private static void scheduleRefresh(Context context) { AlarmManager alarm = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE); if (alarm != null) alarm.setInexactRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60000L, 15 * 60000L, refreshIntent(context)); }
 
     @Override public void onReceive(Context context, Intent intent) {
+        if (ACTION_REFRESH.equals(intent.getAction())) { AppWidgetManager manager = AppWidgetManager.getInstance(context); onUpdate(context, manager, manager.getAppWidgetIds(new ComponentName(context, BookkeepingWidgetProvider.class))); return; }
         if (ACTION_TOGGLE_PERIOD.equals(intent.getAction())) { android.content.SharedPreferences p = context.getSharedPreferences(PREF_WIDGET, 0); p.edit().putBoolean("period_month", !p.getBoolean("period_month", false)).apply(); refreshAll(context); return; }
         super.onReceive(context, intent);
     }
