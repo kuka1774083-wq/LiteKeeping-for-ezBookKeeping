@@ -14,7 +14,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -24,11 +25,13 @@
         <activity
             android:name=".QuickAddActivity"
             android:exported="false"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.EzBookKeeping.Dialog" />
 
         <activity
             android:name=".WebViewActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:launchMode="singleTask" />
 
         <receiver
             android:name=".BookkeepingWidgetProvider"

@@ -41,4 +41,4 @@ $env:GRADLE_USER_HOME = 'D:\MyFiles\Softwares\Android Dev\gradle-home'
 
 ## 版本
 
-当前版本：`1.0.10`。
+当前版本：`1.0.11`。

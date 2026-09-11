@@ -43,10 +43,17 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
                     if (last != null) throw last;
                     saveSpending(context, client.loadRecentTransactions());
                     for (int appWidgetId : appWidgetIds) {
-                        manager.updateAppWidget(appWidgetId, createViews(context));
+                        RemoteViews views = createViews(context);
+                        views.setViewVisibility(R.id.widget_loading, android.view.View.GONE);
+                        manager.updateAppWidget(appWidgetId, views);
                     }
                 } catch (Exception ignored) {
                     // Keep showing the last encrypted cache while the server is unavailable.
+                    for (int appWidgetId : appWidgetIds) {
+                        RemoteViews views = createViews(context);
+                        views.setViewVisibility(R.id.widget_loading, android.view.View.GONE);
+                        manager.updateAppWidget(appWidgetId, views);
+                    }
                 } finally {
                     pendingResult.finish();
                 }
@@ -70,6 +77,7 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         views.setTextViewText(R.id.widget_period_label, context.getString(month ? R.string.widget_month_expense : R.string.widget_today_expense));
         views.setInt(R.id.widget_period_label, "setBackgroundResource", month ? R.drawable.widget_period_month : R.drawable.widget_period_today);
         views.setTextViewText(R.id.widget_balance, MoneyFormatter.format(month ? summary.month : summary.today, summary.currency));
+        views.setViewVisibility(R.id.widget_loading, SecureSettings.isConfigured(context) ? android.view.View.VISIBLE : android.view.View.GONE);
         if (SecureSettings.isConfigured(context)) {
             views.setViewVisibility(R.id.widget_income, android.view.View.GONE);
             views.setViewVisibility(R.id.widget_expense, android.view.View.GONE);
@@ -108,7 +116,7 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
 
     private static PendingIntent activityIntent(Context context, String quickAdd, int requestCode) {
         Intent intent = new Intent(context, quickAdd == null ? MainActivity.class : QuickAddActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         if (quickAdd != null) {
             intent.putExtra(MainActivity.EXTRA_QUICK_ADD, quickAdd);
         }
@@ -116,13 +124,13 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
                 context,
                 requestCode,
                 intent,
-                PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
     }
 
     private static PendingIntent webIntent(Context context) {
         Intent intent = new Intent(context, WebViewActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         return PendingIntent.getActivity(
                 context,
                 4,
