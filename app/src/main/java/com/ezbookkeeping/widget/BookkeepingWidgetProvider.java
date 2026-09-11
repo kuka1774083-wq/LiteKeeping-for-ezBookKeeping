@@ -97,6 +97,8 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
         views.setTextViewText(R.id.widget_period_label, context.getString(month ? R.string.widget_month_expense : R.string.widget_today_expense));
         views.setInt(R.id.widget_period_label, "setBackgroundResource", month ? R.drawable.widget_period_month : R.drawable.widget_period_today);
         views.setTextViewText(R.id.widget_balance, MoneyFormatter.format(month ? summary.month : summary.today, summary.currency));
+        views.setViewVisibility(R.id.widget_balance, android.view.View.VISIBLE);
+        views.setViewVisibility(R.id.widget_refresh_progress, android.view.View.GONE);
         if (SecureSettings.isConfigured(context)) {
             views.setViewVisibility(R.id.widget_income, android.view.View.GONE);
             views.setViewVisibility(R.id.widget_expense, android.view.View.GONE);
