@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.FrameLayout;
 import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -54,13 +55,12 @@ public class MainActivity extends Activity {
     private List<ApiModels.RemoteTransaction> recentTransactions = Collections.emptyList();
     private boolean transactionsLoading;
     private float lastTouchY;
+    private boolean quickEntryMode;
 
     @Override
     protected void onCreate(Bundle state) {
         String quickAdd = getIntent().getStringExtra(EXTRA_QUICK_ADD);
-        if (quickAdd != null) {
-            setTheme(android.R.style.Theme_DeviceDefault_Light_Dialog_Alert);
-        }
+        quickEntryMode = quickAdd != null;
         super.onCreate(state);
         spacing = Math.round(16 * getResources().getDisplayMetrics().density);
         render();
@@ -102,6 +102,12 @@ public class MainActivity extends Activity {
     }
 
     private void render() {
+        if (quickEntryMode) {
+            FrameLayout transparentRoot = new FrameLayout(this);
+            transparentRoot.setBackgroundColor(android.graphics.Color.TRANSPARENT);
+            setContentView(transparentRoot);
+            return;
+        }
         ScrollView scroll = new ScrollView(this);
         content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
