@@ -107,7 +107,7 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
 
     private static PendingIntent activityIntent(Context context, String quickAdd, int requestCode) {
         Intent intent = new Intent(context, quickAdd == null ? MainActivity.class : QuickAddActivity.class)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         if (quickAdd != null) {
             intent.putExtra(MainActivity.EXTRA_QUICK_ADD, quickAdd);
         }
@@ -115,7 +115,7 @@ public class BookkeepingWidgetProvider extends AppWidgetProvider {
                 context,
                 requestCode,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+                PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
     }
 
