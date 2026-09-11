@@ -471,7 +471,13 @@ public class MainActivity extends Activity {
                 .setPositiveButton("提交", null)
                 .create();
         dialog.setOnCancelListener(ignored -> {
-            if (quickEntryMode) finish();
+            if (quickEntryMode) {
+                dialog.dismiss();
+                finishAndRemoveTask();
+            }
+        });
+        dialog.setOnDismissListener(ignored -> {
+            if (quickEntryMode && !isFinishing()) finishAndRemoveTask();
         });
         dialog.setOnShowListener(ignored -> dialog.getButton(AlertDialog.BUTTON_POSITIVE)
                 .setOnClickListener(view -> {
@@ -505,6 +511,12 @@ public class MainActivity extends Activity {
                     }
                 }));
         dialog.show();
+        if (quickEntryMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !hasLocationPermission()) {
+            requestPermissions(new String[] {
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            }, LOCATION_PERMISSION_REQUEST);
+        }
         amount.requestFocus();
     }
 
@@ -625,7 +637,7 @@ public class MainActivity extends Activity {
                 runOnUiThread(() -> {
                     recentTransactions = remote;
                     dialog.dismiss();
-                    if (quickEntryMode) finish();
+                    if (quickEntryMode) finishAndRemoveTask();
                     render();
                     toast(mode == TYPE_TRANSFER ? "转账已上传服务器" : "账单已上传服务器");
                 });
